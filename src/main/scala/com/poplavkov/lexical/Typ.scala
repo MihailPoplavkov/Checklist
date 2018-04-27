@@ -1,13 +1,8 @@
 package com.poplavkov.lexical
 
-sealed trait Typ {
-  def value: String
+object Typ extends Enumeration {
+  type Typ = Value
+
+  val Str: Typ = Value("Строка")
+  val Num: Typ = Value("Число")
 }
-
-case class Number(override val value: String) extends Typ {
-  private val regex = "\\d+(\\.\\d+)?"
-  require(value.matches(regex))
-}
-
-case class Str(override val value: String) extends Typ
-
