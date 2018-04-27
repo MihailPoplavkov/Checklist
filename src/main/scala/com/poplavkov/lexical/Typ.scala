@@ -5,7 +5,7 @@ sealed trait Typ {
 }
 
 case class Number(override val value: String) extends Typ {
-  private val regex = "%d+((\\.%d+)?)"
+  private val regex = "\\d+(\\.\\d+)?"
   require(value.matches(regex))
 }
 
