@@ -18,7 +18,7 @@ object LexicalParser extends RegexParsers {
 
   private val char = "[\\wа-яА-Я]"
 
-  def parseChecklist(input: String): ParseResult[Checklist] = {
+  def parseChecklist(input: String): ParseResult[ChecklistStructure] = {
     parseAll(checklist, input.trim)
   }
 
@@ -89,9 +89,9 @@ object LexicalParser extends RegexParsers {
 
   private def token: Parser[Token] = indent ~> (header | function | scope | line) <~ opt("\n")
 
-  private def checklist: Parser[Checklist] =
+  private def checklist: Parser[ChecklistStructure] =
     title ~ rep(token) ^^ {
-      case title ~ tokens => Checklist(title, tokens)
+      case title ~ tokens => ChecklistStructure(title, tokens)
     }
 
 }

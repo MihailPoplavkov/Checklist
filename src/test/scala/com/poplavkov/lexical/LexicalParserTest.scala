@@ -84,7 +84,7 @@ class LexicalParserTest extends FlatSpec with Matchers {
     val title = "Список в поездку"
     val result = LexicalParser.parseChecklist(s"## $title")
     assert(result.successful)
-    result.get shouldBe Checklist(title, Seq.empty)
+    result.get shouldBe ChecklistStructure(title, Seq.empty)
   }
 
   it should "parse a checklist with two headers" in {
@@ -94,7 +94,7 @@ class LexicalParserTest extends FlatSpec with Matchers {
         |# Header 2""".stripMargin
 
     val expected =
-      Checklist(
+      ChecklistStructure(
         "TITLE",
         Seq(
           Header("Header 1"),
@@ -115,7 +115,7 @@ class LexicalParserTest extends FlatSpec with Matchers {
         | end""".stripMargin
 
     val expected =
-      Checklist(
+      ChecklistStructure(
         "TITLE",
         Seq(
           Function(
@@ -152,7 +152,7 @@ class LexicalParserTest extends FlatSpec with Matchers {
         |the end""".stripMargin
 
     val expected =
-      Checklist(
+      ChecklistStructure(
         "TITLE",
         Seq(
           Header("Header 1"),
