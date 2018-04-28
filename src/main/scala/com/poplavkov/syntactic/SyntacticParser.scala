@@ -91,7 +91,7 @@ object SyntacticParser extends Parsers {
             case arg@SimpleArgument(nam) =>
               Seq(
                 if (args.contains(nam)) {
-                  SimpleArgument(params(args.indexOf(nam)))
+                  Part(params(args.indexOf(nam)))
                 } else {
                   arg
                 })

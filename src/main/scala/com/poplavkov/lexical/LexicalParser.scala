@@ -55,7 +55,7 @@ object LexicalParser extends RegexParsers {
     }
 
   private def functionCall: Parser[FunctionCall] =
-    word ~ wrapped(rep1sep(word, comma)) ^^ {
+    word ~ wrapped(repsep(word, comma)) ^^ {
       case name ~ list => FunctionCall(name, list)
     }
 
