@@ -16,8 +16,10 @@ object LexicalParser extends RegexParsers {
   private var indentLen = 0
   private val indentInc = 1
 
+  private val char = "[\\wа-яА-Я]"
+
   def parseChecklist(input: String): ParseResult[Checklist] = {
-    parseAll(checklist, input + "\n")
+    parseAll(checklist, input.trim)
   }
 
   private def incrementIndent(): Unit = indentLen += indentInc
@@ -26,9 +28,9 @@ object LexicalParser extends RegexParsers {
 
   private def allExcept(exclude: Char*): Parser[String] = s"[^${exclude.mkString}]+".r
 
-  private def word: Parser[String] = "\\w+".r
+  private def word: Parser[String] = s"$char+".r
 
-  private def title: Parser[String] = "## " ~> allExcept('\n') <~ "\n"
+  private[lexical] def title: Parser[String] = "## " ~> allExcept('\n') <~ opt("\n")
 
   private def header: Parser[Header] = "# " ~> allExcept('\n') ^^ Header
 
@@ -37,14 +39,14 @@ object LexicalParser extends RegexParsers {
   private def comma: Parser[Any] = "," ~ opt(" ")
 
   private def functionHeader: Parser[FunctionHeader] =
-    "$$" ~> word ~ wrapped(repsep(word, comma)) ^^ {
+    "$$" ~> word ~ wrapped(repsep(word, comma)) <~ "\n" ^^ {
       case name ~ list =>
         incrementIndent()
         FunctionHeader(name, list)
     }
 
-  private def function: Parser[Function] =
-    functionHeader ~ rep1(indent ~> line) ^^ {
+  private[lexical] def function: Parser[Function] =
+    functionHeader ~ rep1sep(indent ~> line, "\n") ^^ {
       case header ~ body =>
         decrementIndent()
         Function(header, body)
@@ -58,7 +60,7 @@ object LexicalParser extends RegexParsers {
   private def argument: Parser[Argument] = "$" ~> (functionCall | word ^^ SimpleArgument)
 
   private def line: Parser[Line] =
-    rep((allExcept('\n', '$') ^^ Part) | argument) ^^ Line
+    rep1((allExcept('\n', '$') ^^ Part) | argument) ^^ Line
 
   private def typ: Parser[Typ] = {
     val typesWithNames: Set[(String, Typ)] = Typ.values.map(typ => (typ.toString, typ))
@@ -68,24 +70,24 @@ object LexicalParser extends RegexParsers {
   }
 
   private def parameter: Parser[Parameter] =
-    ("-> " ~> allExcept(':') <~ ": ") ~ (typ <~ ": ") ~ word ^^ {
+    (allExcept(':') <~ ": ") ~ (typ <~ ": ") ~ word ^^ {
       case description ~ typ ~ name => Parameter(typ, name, description)
     }
 
   private def parameters: Parser[List[Parameter]] =
-    rep1sep(parameter, comma) ^^ { params =>
+    "-> " ~> rep1sep(parameter, comma) <~ "\n" ^^ { params =>
       incrementIndent()
       params
     }
 
-  private def scope: Parser[Scope] =
+  private[lexical] def scope: Parser[Scope] =
     parameters ~ rep1(token) ^^ {
       case params ~ tokens =>
         decrementIndent()
         Scope(params, tokens)
     }
 
-  private def token: Parser[Token] = indent ~> (header | function | scope | line) <~ "\n"
+  private def token: Parser[Token] = indent ~> (header | function | scope | line) <~ opt("\n")
 
   private def checklist: Parser[Checklist] =
     title ~ rep(token) ^^ {
