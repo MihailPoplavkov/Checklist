@@ -15,7 +15,7 @@ object SyntacticParser extends Parsers {
     state.withValue(State()) {
       checklistStructure match {
         case ChecklistStructure(title, elems) =>
-          Checklist(title, parseTokens(elems, phrase(tokens)))
+          Checklist(title, parseTokens(elems, phrase(tokens)), state.value.allParams)
       }
     }
 
@@ -72,18 +72,33 @@ object SyntacticParser extends Parsers {
         Seq(Str(value))
       case SimpleArgument(name) =>
         Seq(Var(name))
-      case FunctionCall(name, params) =>
-        state.value.functionsHistory.flatten.find(_.header.name == name) match {
-          case None =>
-            throw new RuntimeException(s"No function with name '$name' found")
-          case Some(Function(FunctionHeader(_, args), body)) =>
-            if (params.size != args.size)
-              throw new RuntimeException("Wrong parameters count")
-            if (body.size != 1)
-              throw new RuntimeException("Unsupported function")
-            linePartToStrOrVar(body.head)
-        }
+      case call: FunctionCall =>
+        linePartToStrOrVar(Line(functionCallToLineParts(call)))
     }
+  }
+
+  private def functionCallToLineParts(functionCall: FunctionCall): Seq[LinePart] = functionCall match {
+    case FunctionCall(name, params) =>
+      state.value.functionsHistory.flatten.find(_.header.name == name) match {
+        case None =>
+          throw new RuntimeException(s"No function with name '$name' found")
+        case Some(Function(FunctionHeader(_, args), body)) =>
+          if (params.size != args.size)
+            throw new RuntimeException("Wrong parameters count")
+          if (body.size != 1)
+            throw new RuntimeException("Unsupported function")
+          body.head.elems.flatMap {
+            case arg@SimpleArgument(nam) =>
+              Seq(
+                if (args.contains(nam)) {
+                  SimpleArgument(params(args.indexOf(nam)))
+                } else {
+                  arg
+                })
+            case call: FunctionCall => functionCallToLineParts(call)
+            case part => Seq(part)
+          }
+      }
   }
 
 
