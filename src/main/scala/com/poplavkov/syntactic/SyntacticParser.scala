@@ -1,4 +1,4 @@
-package syntactic
+package com.poplavkov.syntactic
 
 import com.poplavkov.lexical._
 
@@ -22,13 +22,13 @@ object SyntacticParser extends Parsers {
   private def parseTokens(tokens: Seq[Token], parser: Parser[Seq[Expression]]): Seq[Expression] =
     parser(new TokenReader(tokens)) match {
       case NoSuccess(msg, next) =>
-        throw new RuntimeException(s"Syntactic parser error on ${next.pos.line} with msg: $msg")
+        throw new RuntimeException(s"Syntactic parser error with msg: $msg")
       case Success(seq, _) =>
         seq
     }
 
   private def tokens: Parser[Seq[Expression]] =
-    rep1(opt(function) ~> (rep1(header) | rep1(line) | scope)) ^^ (_.flatten)
+    rep1(opt(rep(function)) ~> (rep1(header) | rep1(line) | scope)) ^^ (_.flatten)
 
   private def scope: Parser[Seq[Expression]] =
     elem("Scope", _.isInstanceOf[Scope]) ^^ (_.asInstanceOf[Scope]) ^^ {

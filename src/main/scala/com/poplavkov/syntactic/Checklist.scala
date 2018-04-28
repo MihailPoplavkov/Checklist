@@ -1,4 +1,4 @@
-package syntactic
+package com.poplavkov.syntactic
 
 import com.poplavkov.lexical.Parameter
 
