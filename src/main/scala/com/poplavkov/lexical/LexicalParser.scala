@@ -2,6 +2,7 @@ package com.poplavkov.lexical
 
 import com.poplavkov.lexical.Typ.Typ
 
+import scala.util.DynamicVariable
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
@@ -11,20 +12,21 @@ object LexicalParser extends RegexParsers {
   override val whiteSpace: Regex = "".r
 
   // represents the current indent. Uses to define start/end of a scope
-  private def indent: String = " " * indentLen
+  private def indent: String = " " * indentLen.value
 
-  private var indentLen = 0
+  private val indentLen = new DynamicVariable[Int](0)
   private val indentInc = 1
 
   private val char = "[\\wа-яА-Я]"
 
-  def parseChecklist(input: String): ParseResult[ChecklistStructure] = {
-    parseAll(checklist, input.trim)
-  }
+  def parseChecklist(input: String): ParseResult[ChecklistStructure] =
+    indentLen.withValue(0) {
+      parseAll(checklist, input.trim)
+    }
 
-  private def incrementIndent(): Unit = indentLen += indentInc
+  private def incrementIndent(): Unit = indentLen.value += indentInc
 
-  private def decrementIndent(): Unit = indentLen -= indentInc
+  private def decrementIndent(): Unit = indentLen.value -= indentInc
 
   private def allExcept(exclude: Char*): Parser[String] = s"[^${exclude.mkString}]+".r
 
