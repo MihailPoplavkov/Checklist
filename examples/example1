@@ -1,0 +1,18 @@
+## TITLE
+# Header 1
+$$functionWithTwoArgs(arg1, arg2)
+ arg1 = $arg1 and arg2 = $arg2
+$$functionWithoutArgs()
+ $functionWithTwoArgs(dog, cat)
+-> Scope: Строка: scope
+ $functionWithTwoArgs(jet, brains)
+ var scope = $scope
+ -> One more scope: Число: new_scope
+  body
+  of
+  the
+  scope
+  second var = $new_scope
+# Header 2
+$functionWithoutArgs()
+the end
